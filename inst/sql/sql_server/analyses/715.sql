@@ -7,31 +7,42 @@ with rawData(stratum_id, count_value) as
 		days_supply as count_value
 	from @cdmDatabaseSchema.drug_exposure 
 	where days_supply is not null
-),
-overallStats (stratum_id, avg_value, stdev_value, min_value, max_value, total) as
-(
+)
+
+
   select stratum_id,
     CAST(avg(1.0 * count_value) AS FLOAT) as avg_value,
     CAST(stdev(count_value) AS FLOAT) as stdev_value,
     min(count_value) as min_value,
     max(count_value) as max_value,
     count_big(*) as total
+	into #overallStatstemp_715
   FROM rawData
-	group by stratum_id
-),
-statsView (stratum_id, count_value, total, rn) as
+	group by stratum_id;
+
+with rawData(stratum_id, count_value) as
 (
-  select stratum_id, count_value, count_big(*) as total, row_number() over (partition by stratum_id order by count_value) as rn
-  FROM rawData
-  group by stratum_id, count_value
-),
-priorStats (stratum_id, count_value, total, accumulated) as
-(
-  select s.stratum_id, s.count_value, s.total, sum(p.total) as accumulated
-  from statsView s
-  join statsView p on s.stratum_id = p.stratum_id and p.rn <= s.rn
-  group by s.stratum_id, s.count_value, s.total, s.rn
+  select drug_concept_id AS stratum_id,
+		days_supply as count_value
+	from @cdmDatabaseSchema.drug_exposure 
+	where days_supply is not null
 )
+
+
+  select stratum_id, count_value, 
+  count_big(*) as total,
+  row_number() over (partition by stratum_id order by count_value) as rn into #statsViewtemp_715
+  FROM rawData
+  group by stratum_id, count_value;
+
+  CREATE INDEX IX_#statsviewtemp_715 ON #statsviewtemp_715(rn);
+
+
+  select s.stratum_id, s.count_value, s.total, sum(p.total) as accumulated into #priorStatstemp_715
+  from #statsViewtemp_715 s
+  join #statsViewtemp_715 p on s.stratum_id = p.stratum_id and p.rn <= s.rn
+  group by s.stratum_id, s.count_value, s.total, s.rn;
+
 select 715 as analysis_id,
   CAST(o.stratum_id AS VARCHAR(255)) AS stratum_id,
   o.total as count_value,
@@ -45,8 +56,8 @@ select 715 as analysis_id,
 	MIN(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value,
 	MIN(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
 into #tempResults_715
-from priorStats p
-join overallStats o on p.stratum_id = o.stratum_id
+from #priorStatstemp_715 p
+join #overallStatstemp_715 o on p.stratum_id = o.stratum_id
 GROUP BY o.stratum_id, o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
 ;
 
@@ -58,5 +69,11 @@ into @scratchDatabaseSchema@schemaDelim@tempAchillesPrefix_dist_715
 from #tempResults_715
 ;
 
+truncate table #overallstatstemp_715;
+truncate table #statsViewtemp_715;
+truncate table #priorStatstemp_715;
 truncate table #tempResults_715;
+drop table #overallStatstemp_715;
+drop table #statsViewtemp_715;
+drop table #priorStatstemp_715;
 drop table #tempResults_715;

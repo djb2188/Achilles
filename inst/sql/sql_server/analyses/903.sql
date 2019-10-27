@@ -27,7 +27,7 @@ with rawData(count_value) as
   select count_value, 
   	count_big(*) as total, 
 	row_number() over (order by count_value) as rn
-	into @statsviewtemp_903
+	into #statsviewtemp_903
   FROM rawData
   group by count_value;
 
@@ -37,7 +37,8 @@ with rawData(count_value) as
   select s.count_value, s.total, sum(p.total) as accumulated into #priorstatstemp_903
   from #overallstatstemp_903 s
   join #overallstatstemp_903 p on p.rn <= s.rn
-  group by s.count_value, s.total, s.rn;
+  group by s.count_value, s.total, s.rn
+  ;
 
 select 903 as analysis_id,
   o.total as count_value,

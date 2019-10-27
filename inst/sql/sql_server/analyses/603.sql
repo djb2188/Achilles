@@ -1,5 +1,4 @@
 -- 603	Number of distinct procedure occurrence concepts per person
--- 10/24/19 DJB convert to more temp and temp index for Truven Effort
 
 --HINT DISTRIBUTE_ON_KEY(count_value)
 with rawData(count_value) as
@@ -51,16 +50,18 @@ select 603 as analysis_id,
     MIN(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
 into #tempResults_603
 from #priorstatstemp_603 p
-CROSS JOIN #overallstatstemp o
+CROSS JOIN #overallstatstemp_603 o
 GROUP BY o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value;
+
+
 
 --HINT DISTRIBUTE_ON_KEY(count_value)
 select analysis_id, 
 cast(null as varchar(255)) as stratum_1, cast(null as varchar(255)) as stratum_2, cast(null as varchar(255)) as stratum_3, cast(null as varchar(255)) as stratum_4, cast(null as varchar(255)) as stratum_5,
 count_value, min_value, max_value, avg_value, stdev_value, median_value, p10_value, p25_value, p75_value, p90_value
 into @scratchDatabaseSchema@schemaDelim@tempAchillesPrefix_dist_603
-from #tempResults_603
-;
+from #tempResults_603;
+
 truncate table #overallstatstemp_603;
 truncate table #statsviewtemp_603;
 truncate table #priorstatstemp_603;

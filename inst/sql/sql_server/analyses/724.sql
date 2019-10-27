@@ -14,6 +14,8 @@ select distinct person_id,drug_concept_id
 						   where drug_concept_id != 0
                            group by person_id
                           having count(distinct drug_concept_id) = 1 );
+
+CREATE INDEX IX_#unique_pairs_724 ON #unique_pairs_724(person_id, condition_concept_id);
 						  
 -- Create ordered pairs of concept_ids, then count and rank them (drug pairs must have at least 1000 distinct people)
  

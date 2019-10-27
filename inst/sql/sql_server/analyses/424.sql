@@ -15,6 +15,8 @@ select distinct person_id,condition_concept_id
                            group by person_id
                           having count(distinct condition_concept_id) = 1 );
 
+CREATE INDEX IX_#unique_pairs_424 ON #unique_pairs_424(person_id, condition_concept_id);
+
 -- Create ordered pairs of concept_ids, then count and rank them (condition pairs must have at least 1000 distinct people)
 
  --HINT DISTRIBUTE_ON_KEY(stratum_1)
