@@ -36,14 +36,16 @@ with rawData(count_value) as
   select count_value, 
   	count_big(*) as total, 
 	row_number() over (order by count_value) as rn
-	into #statsviewtemp_1803
+	into #statsViewtemp_1803
   FROM rawData
   group by count_value;
 
+  CREATE INDEX IX_#statsViewtemp_1803 ON #statsViewTemp_1803(rn);
 
-  select s.count_value, s.total, sum(p.total) as accumulated into #priorstatstemp_1803
-  from statsView s
-  join statsView p on p.rn <= s.rn
+
+  select s.count_value, s.total, sum(p.total) as accumulated into #priorStatstemp_1803
+  from #statsViewtemp_1803 s
+  join #statsViewtemp_1803 p on p.rn <= s.rn
   group by s.count_value, s.total, s.rn;
 
 select 1803 as analysis_id,
@@ -58,7 +60,7 @@ select 1803 as analysis_id,
 	MIN(case when p.accumulated >= .75 * o.total then count_value else o.max_value end) as p75_value,
 	MIN(case when p.accumulated >= .90 * o.total then count_value else o.max_value end) as p90_value
 into #tempResults_1803
-from #priorstatstemp_1803 p
+from #priorStatstemp_1803 p
 CROSS JOIN #overallstatstemp_1803 o
 GROUP BY o.total, o.min_value, o.max_value, o.avg_value, o.stdev_value
 ;
@@ -72,10 +74,10 @@ from #tempResults_1803
 ;
 
 truncate table #overallstatstemp_1803;
-truncate table #statsviewtemp_1803;
-truncate table #priorstatstemp_1803;
+truncate table #statsViewtemp_1803;
+truncate table #priorStatstemp_1803;
 truncate table #tempResults_1803;
 drop table #overallstatstemp_1803;
-drop table #statsviewtemp_1803;
-drop table #priorstatstemp_1803;
+drop table #statsViewtemp_1803;
+drop table #priorStatstemp_1803;
 drop table #tempResults_1803;
