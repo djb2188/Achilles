@@ -35,8 +35,8 @@ with rawData(count_value) as
 
 
   select s.count_value, s.total, sum(p.total) as accumulated into #priorstatstemp_903
-  from #overallstatstemp_903 s
-  join #overallstatstemp_903 p on p.rn <= s.rn
+  from #statsviewtemp_903 s
+  join #statsviewtemp_903 p on p.rn <= s.rn
   group by s.count_value, s.total, s.rn
   ;
 
