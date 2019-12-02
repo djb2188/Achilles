@@ -9,6 +9,6 @@ select 1425 as analysis_id,
        cast(null as varchar(255)) as stratum_5,
        count_big(*) AS count_value
   into @scratchDatabaseSchema@schemaDelim@tempAchillesPrefix_1425 
-  from dbo.payer_plan_period
+  from @cdmDatabaseSchema.payer_plan_period
  group by payer_source_concept_id;
 

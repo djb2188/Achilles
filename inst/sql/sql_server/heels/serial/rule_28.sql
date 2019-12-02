@@ -2,7 +2,7 @@
 --are all values (or more than threshold) in measurement table non numerical?
 --(count of Measurment records with no numerical value is in analysis_id 1821)
 
-
+IF OBJECT_ID('tempdb..#tempResults', 'U') IS NOT NULL DROP TABLE #tempResults;
 select * into #tempResults
 from 
 (

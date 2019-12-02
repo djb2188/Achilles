@@ -892,9 +892,14 @@ createIndices <- function(connectionDetails,
     connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection = connection))
     
-    try(DatabaseConnector::executeSql(connection = connection, sql = paste(dropIndicesSql, collapse = "\n\n")), silent = TRUE)
-    DatabaseConnector::executeSql(connection = connection, 
-                                  sql = paste(indicesSql, collapse = "\n\n"))
+    # Remove drop index DJB 11/25/19
+    # try(DatabaseConnector::executeSql(connection = connection, sql = paste(dropIndicesSql, collapse = "\n\n")), silent = TRUE)
+    # DatabaseConnector::executeSql(connection = connection, 
+    #                               sql = paste(indicesSql, collapse = "\n\n"))
+    
+    # Only Build Index DJB 11/25/19
+    try(DatabaseConnector::executeSql(connection = connection, 
+                                      sql = paste(indicesSql, collapse = "\n\n")), silent = TRUE)
   }
   
   ParallelLogger::unregisterLogger("createIndices")
